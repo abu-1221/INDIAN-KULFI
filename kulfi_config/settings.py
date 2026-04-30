@@ -45,6 +45,9 @@ if render_host:
 
 
 CSRF_TRUSTED_ORIGINS = _as_list(os.getenv('CSRF_TRUSTED_ORIGINS'), default='')
+if render_host:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{render_host}")
+
 
 # Railway exposes the live domain in RAILWAY_PUBLIC_DOMAIN.
 # Add it automatically so production does not fail when ALLOWED_HOSTS is missing.
