@@ -24,6 +24,7 @@ An enterprise-grade administrative and operational portal designed for high-prec
 
 ### ⚙️ Seamless Automation
 *   **One-Click Startup**: Silent background bootloader (`Launch_Kulfi.vbs`) that clears ports automatically.
+*   **Cloud Registry**: Production-grade hosting on Render.com for global access and centralized data.
 *   **Shop Cloud (Local Hosting)**: Bind to your local Wi-Fi for **Zero Cost** and **Zero Lag** performance across all shop devices.
 *   **Auto-IP Detection**: Startup script automatically displays the network URL for mobile connections.
 
