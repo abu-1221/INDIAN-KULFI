@@ -1,0 +1,153 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Neural Intelligence | Indian Kulfi Registry{% endblock %}
+
+{% block content %}
+<div class="mb-12">
+    <h1 class="text-4xl font-display font-black text-dark tracking-tight flex items-center gap-4">
+        <i class="fas fa-chart-line text-primary"></i> 
+        Reports <span class="text-primary">Dashboard</span>
+    </h1>
+    <p class="text-textSecondary mt-3 font-medium text-lg">View reports and business performance metrics.</p>
+</div>
+
+<!-- Core Intelligence Hub -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-10">
+    <!-- Main Launchers -->
+    <div class="xl:col-span-8 space-y-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="launchers-reveal">
+            <!-- Daily Pulse -->
+            <a href="{% url 'daily_report' %}" class="card-premium group hover:shadow-primary/20 border-primary/5  transition-all duration-500 bg-white">
+                <div class="flex items-center gap-6 mb-8">
+                    <div class="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-inner">
+                        <i class="fas fa-bolt-lightning text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-display font-black text-dark group-hover:text-primary transition-colors">Daily Sales Report</h3>
+                        <p class="text-[9px] font-black text-textSecondary uppercase tracking-widest mt-1">Today's Performance</p>
+                    </div>
+                </div>
+                <p class="text-xs text-textSecondary leading-relaxed mb-8">View today's sales, stock changes, and operations.</p>
+                <div class="flex items-center justify-between pt-6 border-t border-border-color">
+                    <span class="text-[10px] font-black text-textSecondary uppercase tracking-[0.2em]">View Report</span>
+                    <i class="fas fa-arrow-right text-primary  "></i>
+                </div>
+            </a>
+
+            <!-- Profit Engine -->
+            <a href="{% url 'profit_report' %}" class="card-premium group hover:shadow-accent/20 border-accent/5  transition-all duration-500 bg-white">
+                <div class="flex items-center gap-6 mb-8">
+                    <div class="w-16 h-16 rounded-3xl bg-accent/10 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-white transition-all duration-500 shadow-inner">
+                        <i class="fas fa-chart-pie text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-display font-black text-dark group-hover:text-accent transition-colors">Profit Report</h3>
+                        <p class="text-[9px] font-black text-textSecondary uppercase tracking-widest mt-1">Business Profit</p>
+                    </div>
+                </div>
+                <p class="text-xs text-textSecondary leading-relaxed mb-8">Analyze profit margins based on cost and selling prices.</p>
+                <div class="flex items-center justify-between pt-6 border-t border-border-color">
+                    <span class="text-[10px] font-black text-textSecondary uppercase tracking-[0.2em]">View Report</span>
+                    <i class="fas fa-arrow-right text-accent  "></i>
+                </div>
+            </a>
+
+            <!-- Fiscal Ledger -->
+            <a href="{% url 'income_statement' %}" class="card-premium group hover:shadow-secondary/20 border-secondary/5  transition-all duration-500 bg-white">
+                <div class="flex items-center gap-6 mb-8">
+                    <div class="w-16 h-16 rounded-3xl bg-secondary/10 flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-all duration-500 shadow-inner">
+                        <i class="fas fa-file-invoice-dollar text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-display font-black text-dark group-hover:text-secondary transition-colors">Income Statement</h3>
+                        <p class="text-[9px] font-black text-textSecondary uppercase tracking-widest mt-1">Profit & Loss</p>
+                    </div>
+                </div>
+                <p class="text-xs text-textSecondary leading-relaxed mb-8">Full income statement showing revenue and expenses.</p>
+                <div class="flex items-center justify-between pt-6 border-t border-border-color">
+                    <span class="text-[10px] font-black text-textSecondary uppercase tracking-[0.2em]">View Report</span>
+                    <i class="fas fa-arrow-right text-secondary  "></i>
+                </div>
+            </a>
+
+            <!-- Stock Auditor -->
+            <a href="{% url 'stock_report' %}" class="card-premium group hover:shadow-secondary/20 border-secondary/5  transition-all duration-500 bg-white">
+                <div class="flex items-center gap-6 mb-8">
+                    <div class="w-16 h-16 rounded-3xl bg-secondary/10 flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-all duration-500 shadow-inner">
+                        <i class="fas fa-warehouse text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-display font-black text-dark group-hover:text-secondary transition-colors">Stock Report</h3>
+                        <p class="text-[9px] font-black text-textSecondary uppercase tracking-widest mt-1">Stock Status</p>
+                    </div>
+                </div>
+                <p class="text-xs text-textSecondary leading-relaxed mb-8">View warehouse stock levels, low stock alerts, and total value.</p>
+                <div class="flex items-center justify-between pt-6 border-t border-border-color">
+                    <span class="text-[10px] font-black text-textSecondary uppercase tracking-[0.2em]">View Report</span>
+                    <i class="fas fa-arrow-right text-secondary  "></i>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Analytics Sidebar -->
+    <div class="xl:col-span-4 space-y-10" id="sidebar-reveal">
+        <!-- Global Efficiency -->
+        <div class="card-premium bg-dark text-white border-none shadow-2xl shadow-dark/10">
+            <h4 class="text-[10px] font-black text-white uppercase tracking-[0.4em] mb-10 flex items-center gap-3">
+                <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span> System Health
+            </h4>
+            
+            <div class="space-y-10">
+                <div class="text-center">
+                    <p class="text-[9px] font-black text-white/60 uppercase tracking-[0.3em] mb-2">Overall Profit Margin</p>
+                    <h2 class="text-5xl font-display font-black text-white">94.2<span class="text-lg text-primary">%</span></h2>
+                </div>
+                
+                <div class="space-y-6">
+                    <div class="flex justify-between items-end">
+                        <p class="text-[9px] font-black text-white/60 uppercase tracking-widest">Data Status</p>
+                        <p class="text-xs font-black text-secondary">Stable</p>
+                    </div>
+                    <div class="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+                        <div class="bg-gradient-to-r from-primary to-secondary h-full w-[94%] shadow-[0_0_10px_#E63946]"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Protocol -->
+        <div class="card-premium border-border-color">
+            <h4 class="text-[10px] font-black text-textSecondary uppercase tracking-[0.4em] mb-6">Security Level</h4>
+            <div class="space-y-6">
+                <div class="flex gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-background border border-border-color flex items-center justify-center text-primary">
+                        <i class="fas fa-shield-halved text-xs"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-dark">Secure Connection Active</p>
+                        <p class="text-[9px] text-textSecondary mt-1 uppercase tracking-widest">Secure Reporting</p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-background border border-border-color flex items-center justify-center text-accent">
+                        <i class="fas fa-key text-xs"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-dark">Admin Access</p>
+                        <p class="text-[9px] text-textSecondary mt-1 uppercase tracking-widest">Full Permissions Granted</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        
+        
+    });
+</script>
+{% endblock %}
+

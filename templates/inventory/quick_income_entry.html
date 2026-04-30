@@ -1,0 +1,137 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Income Registry | Indian Kulfi Intelligence{% endblock %}
+
+{% block content %}
+<div class="mb-12">
+    <h1 class="text-4xl font-display font-black text-white tracking-tight flex items-center gap-4">
+        <i class="fas fa-coins neon-text-orange"></i> 
+        Revenue <span class="text-primary">Integration</span>
+    </h1>
+    <p class="text-text-muted mt-3 font-medium text-lg">Record secondary income streams and auxiliary financial inflows.</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+    <!-- Left: Entry Control -->
+    <div class="lg:col-span-4">
+        <div class="card-premium sticky top-32 bg-dark-900/60 border-primary/10">
+            <div class="flex items-center justify-between mb-10">
+                <h3 class="text-sm font-black text-white uppercase tracking-[0.3em] flex items-center gap-3">
+                    <i class="fas fa-plus-circle text-primary"></i> New Vector
+                </h3>
+            </div>
+
+            <form method="POST" class="space-y-8">
+                {% csrf_token %}
+                
+                <div class="space-y-6">
+                    <!-- Date -->
+                    <div class="space-y-2 group">
+                        <label class="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] px-1 group-focus-within:text-primary transition-colors">Timestamp</label>
+                        <input type="date" name="income_date" value="{% now 'Y-m-d' %}" class="input-premium py-4" required>
+                    </div>
+
+                    <!-- Details -->
+                    <div class="space-y-2 group">
+                        <label class="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] px-1 group-focus-within:text-primary transition-colors">Vector Details</label>
+                        <textarea name="details" rows="3" class="input-premium py-4 resize-none" placeholder="Source of income..." required></textarea>
+                    </div>
+
+                    <!-- Amount -->
+                    <div class="space-y-2 group">
+                        <label class="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] px-1 group-focus-within:text-primary transition-colors">Quantum Amount</label>
+                        <div class="relative">
+                            <span class="absolute left-5 top-1/2 -translate-y-1/2 text-primary font-black">₹</span>
+                            <input type="number" name="amount" step="0.01" class="input-premium pl-10 py-4 font-display font-black text-lg" placeholder="0.00" required>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full btn-primary py-5 text-base shadow-neon-orange group">
+                    <i class="fas fa-database mr-3 group-hover:rotate-12 "></i>
+                    Integrate Data
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Right: Registry History -->
+    <div class="lg:col-span-8 space-y-8">
+        <!-- Quick Stats Overlay -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="card-premium flex items-center gap-6 bg-gradient-to-br from-dark-800 to-dark-900 border-accent/10">
+                <div class="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center text-accent shadow-neon-blue">
+                    <i class="fas fa-calendar-day text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-1">Period Inflow</p>
+                    <p class="text-2xl font-display font-black text-white">₹{{ total_income|default:"0.00" }}</p>
+                </div>
+            </div>
+            <div class="card-premium flex items-center gap-6 bg-gradient-to-br from-dark-800 to-dark-900 border-primary/10">
+                <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-neon-orange">
+                    <i class="fas fa-chart-line text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-1">Total Entries</p>
+                    <p class="text-2xl font-display font-black text-white">{{ entries|length }} Nodes</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Table -->
+        <div class="card-premium p-0 overflow-hidden shadow-2xl">
+            <div class="px-8 py-6 border-b border-glass-border flex items-center justify-between bg-white/5">
+                <h4 class="text-xs font-black text-white uppercase tracking-[0.3em]">Temporal Registry</h4>
+                <div class="flex gap-2">
+                    <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                    <span class="w-2 h-2 rounded-full bg-accent animate-pulse delay-75"></span>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-dark-950/40 border-b border-glass-border">
+                        <tr>
+                            <th class="px-8 py-4 text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Timestamp</th>
+                            <th class="px-8 py-4 text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Identity Details</th>
+                            <th class="px-8 py-4 text-[10px] font-black text-text-muted uppercase tracking-[0.2em] text-right">Quantum</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-glass-border">
+                        {% for item in entries %}
+                        <tr class="table-row-hover group">
+                            <td class="px-8 py-5">
+                                <span class="text-sm font-bold text-white">{{ item.income_date|date:'d M, Y' }}</span>
+                            </td>
+                            <td class="px-8 py-5">
+                                <p class="text-xs font-medium text-text-muted leading-relaxed group-hover:text-text transition-colors">{{ item.details }}</p>
+                            </td>
+                            <td class="px-8 py-5 text-right">
+                                <span class="text-base font-display font-black text-primary">₹{{ item.amount|floatformat:2 }}</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="py-24 text-center">
+                                <div class="flex flex-col items-center gap-4 opacity-30">
+                                    <i class="fas fa-box-open text-5xl"></i>
+                                    <p class="text-[10px] font-black uppercase tracking-[0.4em]">Registry is currently vacant</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        
+        
+    });
+</script>
+{% endblock %}
+

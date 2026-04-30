@@ -1,0 +1,254 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Quick Stock Ledger | Indian Kulfi Registry{% endblock %}
+
+{% block content %}
+<div class="mb-12">
+    <div>
+        <h1 class="text-5xl font-display font-black text-dark tracking-tighter">
+            Quick Stock <span class="text-primary">Ledger</span>
+        </h1>
+        <p class="text-textSecondary mt-3 font-bold text-lg">High-speed inventory reconciliation and logistics recording portal.</p>
+    </div>
+</div>
+
+<!-- Stock KPIs -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+    <div class="card-premium p-8 bg-white border-l-4 border-l-primary shadow-sm">
+        <p class="text-[10px] font-black text-textSecondary uppercase tracking-[0.2em] mb-1">Products Active</p>
+        <h3 class="text-4xl font-display font-black text-primary tracking-tighter" id="summary-product-count">0</h3>
+    </div>
+    <div class="card-premium p-8 bg-white border-l-4 border-l-secondary shadow-sm">
+        <p class="text-[10px] font-black text-textSecondary uppercase tracking-[0.2em] mb-1">Current Stock Volume</p>
+        <h3 class="text-4xl font-display font-black text-secondary tracking-tighter" id="summary-effective-qty">0</h3>
+    </div>
+    <div class="card-premium p-8 bg-white border-l-4 border-l-accent shadow-sm">
+        <p class="text-[10px] font-black text-textSecondary uppercase tracking-[0.2em] mb-1">Global Valuation</p>
+        <h3 class="text-4xl font-display font-black text-accent tracking-tighter">₹<span id="summary-total-value">0.00</span></h3>
+    </div>
+</div>
+
+<form method="POST" id="quick-inventory-form" class="space-y-8">
+    {% csrf_token %}
+    <input type="hidden" name="selected_manufacturer" id="selected_manufacturer" value="{{ selected_manufacturer|default:'' }}">
+
+    <!-- Controls -->
+    <div class="card-premium p-10 bg-dark text-white border-none shadow-2xl flex flex-wrap items-end gap-8">
+        <div class="flex-1 min-w-[240px]">
+            <label class="text-[10px] font-black text-white/50 uppercase tracking-widest mb-4 block">Reconciliation Date</label>
+            <input type="date" id="movement_date" name="movement_date" class="w-full bg-white/10 border border-white/10 rounded-2xl px-6 py-4 text-sm font-black text-white focus:ring-4 focus:ring-primary/20 outline-none transition-all" value="{{ selected_movement_date|date:'Y-m-d' }}" required>
+        </div>
+        <div class="flex-1 min-w-[240px]">
+            <label class="text-[10px] font-black text-white/50 uppercase tracking-widest mb-4 block">Fleet Manufacturer</label>
+            <select id="manufacturer_filter" class="w-full bg-white/10 border border-white/10 rounded-2xl px-6 py-4 text-sm font-black text-white focus:ring-4 focus:ring-primary/20 outline-none appearance-none transition-all cursor-pointer">
+                <option value="" class="text-dark" {% if not selected_manufacturer %}selected{% endif %}>Identify Fleet Node...</option>
+                <option value="Indian Kulfi" class="text-dark" {% if selected_manufacturer == 'Indian Kulfi' %}selected{% endif %}>Indian Kulfi</option>
+                <option value="Kulfi Corner" class="text-dark" {% if selected_manufacturer == 'Kulfi Corner' %}selected{% endif %}>Kulfi Corner</option>
+            </select>
+        </div>
+        <div class="flex gap-4">
+            <button type="button" id="cancel-quick-inventory" class="btn-premium btn-secondary border-white/10 text-white hover:bg-white/10 px-10 py-4 h-full">Abort</button>
+            <button type="submit" class="btn-premium btn-primary px-12 py-4 h-full">Commit Changes</button>
+        </div>
+    </div>
+
+    <!-- Product Matrix -->
+    <div class="card-premium p-0 overflow-hidden shadow-2xl border-border-color">
+        <div class="px-10 py-8 border-b border-border-color flex items-center justify-between bg-background">
+            <h3 class="font-display font-black uppercase tracking-[0.3em] text-sm text-dark">Resource Allocation Matrix</h3>
+            <span class="text-[10px] font-black text-textSecondary uppercase tracking-widest" id="total-packs-display">Total Packs: 0</span>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="table-premium w-full text-left">
+                <thead>
+                    <tr class="border-b border-border-color">
+                        <th class="pl-10 py-6 text-[10px] font-black text-dark uppercase tracking-widest">Asset Descriptor</th>
+                        <th class="text-[10px] font-black text-dark uppercase tracking-widest">Current Registry</th>
+                        <th class="text-[10px] font-black text-dark uppercase tracking-widest">Cost Point</th>
+                        <th class="text-[10px] font-black text-dark uppercase tracking-widest">Vector Type</th>
+                        <th class="adjustment-col hidden text-[10px] font-black text-dark uppercase tracking-widest">Protocol Mode</th>
+                        <th class="text-[10px] font-black text-dark uppercase tracking-widest">Scale</th>
+                        <th class="text-[10px] font-black text-dark uppercase tracking-widest">Input Volume</th>
+                        <th class="text-[10px] font-black text-dark uppercase tracking-widest text-right pr-10">Net Total</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border-color">
+                    {% for group in product_groups %}
+                    <tr data-ik-id="{{ group.ik.id|default:'' }}"
+                        data-ik-cost="{% if group.ik_cost_override %}{{ group.ik_cost_override }}{% elif group.ik %}{{ group.ik.cost_price }}{% else %}0{% endif %}"
+                        data-ik-stock="{{ group.ik_stock|default:'0' }}"
+                        data-kc-id="{{ group.kc.id|default:'' }}"
+                        data-kc-cost="{% if group.kc_cost_override %}{{ group.kc_cost_override }}{% elif group.kc %}{{ group.kc.cost_price }}{% else %}0{% endif %}"
+                        data-kc-stock="{{ group.kc_stock|default:'0' }}"
+                        class="group hover:bg-background transition-colors">
+                        <td class="pl-10 py-6">
+                            <p class="text-sm font-black text-dark group-hover:text-primary transition-colors">{{ group.name }}</p>
+                            <input type="hidden" name="product[]" class="product-id-input" value="{{ group.ik.id|default:'' }}">
+                        </td>
+                        <td class="stock-cell text-sm font-black text-textSecondary">{{ group.ik_stock|default:'0' }}</td>
+                        <td>
+                            <span class="cost-price-display text-sm font-black text-primary">₹{% if selected_manufacturer == 'Kulfi Corner' %}{{ group.kc.cost_price|default:'0'|floatformat:2 }}{% else %}{{ group.ik.cost_price|default:'0'|floatformat:2 }}{% endif %}</span>
+                            <input type="hidden" name="cost_price[]" class="cost-price-input" value="{% if selected_manufacturer == 'Kulfi Corner' %}{{ group.kc.cost_price|default:'0' }}{% else %}{{ group.ik.cost_price|default:'0' }}{% endif %}">
+                        </td>
+                        <td>
+                            <select name="movement_type[]" class="bg-background border-none rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest text-dark focus:ring-2 focus:ring-primary/10 movement-type-select cursor-pointer">
+                                <option value="IN">Stock In</option>
+                                <option value="OUT">Stock Out</option>
+                                <option value="ADJUSTMENT">Adjustment</option>
+                            </select>
+                        </td>
+                        <td class="adjustment-col hidden">
+                            <select name="adjustment_mode[]" class="bg-background border-none rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest text-dark focus:ring-2 focus:ring-primary/10 adjustment-mode-select hidden cursor-pointer">
+                                <option value="PLUS">+ Positive</option>
+                                <option value="MINUS">- Negative</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select name="quantity_unit[]" class="bg-background border-none rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest text-dark focus:ring-2 focus:ring-primary/10 quantity-unit cursor-pointer">
+                                <option value="NOS">Nos</option>
+                                <option value="PACK" selected>Pack (x6)</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="number" name="quantity[]" min="0" placeholder="0" class="w-32 bg-background border border-border-color rounded-2xl px-5 py-3 text-sm font-black text-dark focus:ring-4 focus:ring-primary/10 outline-none transition-all quantity-input">
+                        </td>
+                        <td class="text-right pr-10">
+                            <p class="text-sm font-black text-dark row-total tracking-tighter">₹0.00</p>
+                            <p class="text-[9px] font-black text-textSecondary uppercase tracking-widest mt-1"><span class="effective-qty">0</span> Units</p>
+                        </td>
+                        <input type="hidden" name="movement_date[]" class="movement-date-value" value="{{ selected_movement_date|date:'Y-m-d' }}">
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const quickInventoryForm = document.getElementById('quick-inventory-form');
+    const movementDateInput = document.getElementById('movement_date');
+    const manufacturerFilter = document.getElementById('manufacturer_filter');
+    const selectedManufacturerInput = document.getElementById('selected_manufacturer');
+    const cancelButton = document.getElementById('cancel-quick-inventory');
+
+    if (cancelButton) {
+        cancelButton.addEventListener('click', function() {
+            window.location.href = "{% url 'dashboard' %}";
+        });
+    }
+
+    function syncMovementDateToRows() {
+        const dateValue = movementDateInput.value;
+        document.querySelectorAll('.movement-date-value').forEach(input => input.value = dateValue);
+    }
+
+    movementDateInput.addEventListener('change', function() {
+        syncMovementDateToRows();
+        updateURL();
+    });
+
+    function updateURL() {
+        const params = new URLSearchParams(window.location.search);
+        if (movementDateInput.value) params.set('movement_date', movementDateInput.value);
+        if (manufacturerFilter.value) params.set('manufacturer', manufacturerFilter.value);
+        window.location.search = params.toString();
+    }
+
+    function updateSummary() {
+        let totalPacks = 0, totalEffectiveQty = 0, totalValue = 0, productCount = 0;
+
+        document.querySelectorAll('tbody tr').forEach(row => {
+            if (row.style.display === 'none') return;
+            const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
+            const unit = row.querySelector('.quantity-unit').value;
+            const effective = parseInt(row.querySelector('.effective-qty').textContent) || 0;
+            const rowValue = parseFloat(row.querySelector('.row-total').textContent.replace('₹', '')) || 0;
+
+            if (quantity > 0) productCount++;
+            if (unit === 'PACK') totalPacks += quantity;
+            totalEffectiveQty += effective;
+            totalValue += rowValue;
+        });
+
+        document.getElementById('summary-total-packs-display')?.textContent = `Total Packs: ${totalPacks}`;
+        document.getElementById('summary-effective-qty').textContent = totalEffectiveQty;
+        document.getElementById('summary-total-value').textContent = totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+        document.getElementById('summary-product-count').textContent = productCount;
+    }
+
+    function updateEffectiveQty(row) {
+        const qtyInput = row.querySelector('.quantity-input');
+        const unitSelect = row.querySelector('.quantity-unit');
+        const effectiveSpan = row.querySelector('.effective-qty');
+        const rowTotalSpan = row.querySelector('.row-total');
+        const costPrice = parseFloat(row.querySelector('.cost-price-input').value || 0);
+
+        let qty = Math.max(0, parseInt(qtyInput.value) || 0);
+        const effective = unitSelect.value === 'PACK' ? qty * 6 : qty;
+
+        effectiveSpan.textContent = effective;
+        rowTotalSpan.textContent = '₹' + (effective * costPrice).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    }
+
+    function switchManufacturer(manufacturer) {
+        if (!manufacturer) {
+            document.querySelectorAll('tbody tr').forEach(row => row.style.display = 'none');
+            updateSummary();
+            return;
+        }
+
+        const isKC = manufacturer === 'Kulfi Corner';
+        document.querySelectorAll('tbody tr').forEach(row => {
+            const activeId = isKC ? row.dataset.kcId : row.dataset.ikId;
+            const activeCost = isKC ? row.dataset.kcCost : row.dataset.ikCost;
+            const activeStock = isKC ? row.dataset.kcStock : row.dataset.ikStock;
+
+            if (!activeId) {
+                row.style.display = 'none';
+            } else {
+                row.style.display = '';
+                row.querySelector('.product-id-input').value = activeId;
+                row.querySelector('.cost-price-display').textContent = '₹' + parseFloat(activeCost).toFixed(2);
+                row.querySelector('.cost-price-input').value = activeCost;
+                row.querySelector('.stock-cell').textContent = activeStock;
+                updateEffectiveQty(row);
+            }
+        });
+        updateSummary();
+    }
+
+    manufacturerFilter.addEventListener('change', function() {
+        selectedManufacturerInput.value = this.value;
+        updateURL();
+    });
+
+    document.querySelectorAll('tbody tr').forEach(row => {
+        const inputs = row.querySelectorAll('.quantity-input, .quantity-unit, .movement-type-select');
+        inputs.forEach(input => {
+            input.addEventListener('change', () => {
+                if (input.classList.contains('movement-type-select')) {
+                    const isAdj = input.value === 'ADJUSTMENT';
+                    row.querySelector('.adjustment-col').classList.toggle('hidden', !isAdj);
+                    row.querySelector('.adjustment-mode-select').classList.toggle('hidden', !isAdj);
+                }
+                updateEffectiveQty(row);
+                updateSummary();
+            });
+        });
+        row.querySelector('.quantity-input').addEventListener('input', () => {
+            updateEffectiveQty(row);
+            updateSummary();
+        });
+    });
+
+    switchManufacturer(manufacturerFilter.value);
+    syncMovementDateToRows();
+});
+</script>
+{% endblock %}
+

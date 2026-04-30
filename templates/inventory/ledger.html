@@ -1,0 +1,131 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}General Ledger | Indian Kulfi Registry{% endblock %}
+
+{% block content %}
+<div class="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-8">
+    <div>
+        <h1 class="text-5xl font-display font-black text-dark tracking-tighter">
+            General <span class="text-primary">Ledger</span>
+        </h1>
+        <p class="text-textSecondary mt-3 font-bold text-lg">Consolidated chronological financial record of all operations.</p>
+    </div>
+    
+    <div class="flex items-center gap-4">
+        <!-- Balance Badge -->
+        <div class="flex items-center gap-6 px-8 py-4 rounded-3xl bg-dark border border-white/10 shadow-2xl">
+            <div class="flex flex-col">
+                <span class="text-[10px] font-black text-white/50 uppercase tracking-widest">Running Balance</span>
+                <span class="text-2xl font-display font-black {% if current_balance >= 0 %}text-secondary{% else %}text-primary{% endif %}">₹{{ current_balance|floatformat:2 }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ledger Matrix -->
+<div class="card-premium p-0 overflow-hidden shadow-2xl">
+    <div class="px-10 py-8 border-b border-border-color flex flex-col md:flex-row justify-between items-center gap-6 bg-white">
+        <h3 class="font-display font-black uppercase tracking-[0.3em] text-sm text-dark">Transaction Matrix</h3>
+        
+        <form method="GET" class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+            <div class="flex items-center gap-2">
+                <input type="date" name="start_date" value="{{ start_date|default:'' }}" class="input-premium py-2 px-4 text-sm">
+                <span class="text-textSecondary font-bold">to</span>
+                <input type="date" name="end_date" value="{{ end_date|default:'' }}" class="input-premium py-2 px-4 text-sm">
+            </div>
+            <button type="submit" class="btn-premium btn-primary py-2 px-6 text-sm">Apply Filter</button>
+            {% if start_date or end_date %}
+            <a href="{% url 'ledger' %}" class="btn-premium py-2 px-4 text-sm text-textSecondary hover:text-dark">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="table-premium w-full text-left">
+            <thead>
+                <tr class="bg-neutral-50/50">
+                    <th class="pl-10 py-6 text-[10px] font-black text-dark uppercase tracking-widest">Date</th>
+                    <th class="py-6 text-[10px] font-black text-dark uppercase tracking-widest">Description</th>
+                    <th class="py-6 text-[10px] font-black text-dark uppercase tracking-widest text-right">Debit (-)</th>
+                    <th class="py-6 text-[10px] font-black text-dark uppercase tracking-widest text-right">Credit (+)</th>
+                    <th class="py-6 text-[10px] font-black text-dark uppercase tracking-widest text-right pr-10">Balance</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-neutral-100">
+                {% for entry in page_obj %}
+                <tr class="group hover:bg-background/50 transition-colors">
+                    <td class="pl-10 py-6">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-background flex items-center justify-center text-textSecondary group-hover:text-primary transition-colors border border-border-color">
+                                <i class="fas fa-calendar-alt text-xs"></i>
+                            </div>
+                            <span class="text-sm font-black text-dark">{{ entry.date|date:'d M, Y' }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="flex items-center gap-3">
+                            <span class="w-2 h-2 rounded-full 
+                                {% if entry.type == 'SALE' %}bg-secondary shadow-[0_0_8px_#2A9D8F]
+                                {% elif entry.type == 'EXPENSE' %}bg-primary shadow-[0_0_8px_#E63946]
+                                {% else %}bg-accent shadow-[0_0_8px_#F4A261]{% endif %}"></span>
+                            <p class="text-sm font-bold text-dark">{{ entry.description }}</p>
+                        </div>
+                    </td>
+                    <td class="text-right">
+                        {% if entry.debit > 0 %}
+                        <span class="text-sm font-black text-primary">-₹{{ entry.debit|floatformat:2 }}</span>
+                        {% else %}
+                        <span class="text-sm font-bold text-neutral-300">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-right">
+                        {% if entry.credit > 0 %}
+                        <span class="text-sm font-black text-secondary">+₹{{ entry.credit|floatformat:2 }}</span>
+                        {% else %}
+                        <span class="text-sm font-bold text-neutral-300">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-right pr-10">
+                        <span class="text-sm font-black {% if entry.balance >= 0 %}text-dark{% else %}text-primary{% endif %}">
+                            ₹{{ entry.balance|floatformat:2 }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-10 py-32 text-center">
+                        <div class="flex flex-col items-center gap-6">
+                            <i class="fas fa-book-open text-6xl text-neutral-200"></i>
+                            <p class="text-sm font-black uppercase tracking-[0.4em] text-neutral-400">No Ledger Entries Found</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="px-10 py-8 bg-neutral-50/50 border-t border-neutral-100 flex items-center justify-center">
+        <nav class="flex items-center gap-3">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" class="w-12 h-12 rounded-2xl border border-neutral-200 bg-white flex items-center justify-center text-neutral-400 hover:text-primary transition-all">
+                <i class="fas fa-chevron-left text-xs"></i>
+            </a>
+            {% endif %}
+
+            <span class="text-xs font-black uppercase tracking-widest text-textSecondary mx-4">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" class="w-12 h-12 rounded-2xl border border-neutral-200 bg-white flex items-center justify-center text-neutral-400 hover:text-primary transition-all">
+                <i class="fas fa-chevron-right text-xs"></i>
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
