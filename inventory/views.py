@@ -13,18 +13,19 @@ def save_stock_order(request):
         manufacturer = data.get('manufacturer')
         order_date = data.get('order_date')
         items = data.get('items', [])
-        order = StockOrder.objects.create(
-            manufacturer=manufacturer,
-            order_date=order_date,
-            created_by=request.user if request.user.is_authenticated else None
-        )
-        for item in items:
-            StockOrderItem.objects.create(
-                order=order,
-                kulfi_name=item.get('name'),
-                lot=item.get('lot', 0),
-                quantity=item.get('qty', 0)
+        with transaction.atomic():
+            order = StockOrder.objects.create(
+                manufacturer=manufacturer,
+                order_date=order_date,
+                created_by=request.user if request.user.is_authenticated else None
             )
+            for item in items:
+                StockOrderItem.objects.create(
+                    order=order,
+                    kulfi_name=item.get('name'),
+                    lot=item.get('lot', 0),
+                    quantity=item.get('qty', 0)
+                )
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 # Forgot Password Email Handler
@@ -1248,18 +1249,19 @@ def quick_inventory_entry(request):
             else:
                 movement_notes = manufacturer_stamp
 
-            Inventory.objects.create(
-                product=product,
-                movement_type=movement_type,
-                quantity=inventory_quantity,
-                unit_cost=cost_price,
-                movement_date=movement_date,
-                reference_document=f'Quick entry {movement_date}',
-                notes=movement_notes,
-                created_by=request.user
-            )
-            product.current_stock = max(0, product.current_stock)
-            product.save()
+            with transaction.atomic():
+                Inventory.objects.create(
+                    product=product,
+                    movement_type=movement_type,
+                    quantity=inventory_quantity,
+                    unit_cost=cost_price,
+                    movement_date=movement_date,
+                    reference_document=f'Quick entry {movement_date}',
+                    notes=movement_notes,
+                    created_by=request.user
+                )
+                product.current_stock = max(0, product.current_stock)
+                product.save()
             recorded_items.append({
                 'name': product.name,
                 'sku': product.sku,
@@ -2089,18 +2091,19 @@ def quick_sales_entry(request):
                     if allocated_quantity <= 0:
                         continue
 
-                    Sales.objects.create(
-                        product=product,
-                        quantity=allocated_quantity,
-                        unit_price=product.selling_price,
-                        sale_date=sale_date,
-                        recorded_by=request.user,
-                        notes=notes,
-                    )
+                    with transaction.atomic():
+                        Sales.objects.create(
+                            product=product,
+                            quantity=allocated_quantity,
+                            unit_price=product.selling_price,
+                            sale_date=sale_date,
+                            recorded_by=request.user,
+                            notes=notes,
+                        )
 
-                    product.current_stock -= allocated_quantity
-                    product.current_stock = max(0, product.current_stock)
-                    product.save()
+                        product.current_stock -= allocated_quantity
+                        product.current_stock = max(0, product.current_stock)
+                        product.save()
 
                     total_items_sold += allocated_quantity
                     total_selling_price += Decimal(allocated_quantity) * product.selling_price
