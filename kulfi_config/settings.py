@@ -39,6 +39,10 @@ SECRET_KEY = os.getenv('SECRET_KEY') or get_random_secret_key()
 DEBUG = _as_bool(os.getenv('DEBUG'), default=True)
 
 ALLOWED_HOSTS = ['*']
+render_host = os.getenv('RENDER_EXTERNAL_HOSTNAME')
+if render_host:
+    ALLOWED_HOSTS.append(render_host)
+
 
 CSRF_TRUSTED_ORIGINS = _as_list(os.getenv('CSRF_TRUSTED_ORIGINS'), default='')
 
